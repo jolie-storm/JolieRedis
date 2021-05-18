@@ -1,0 +1,11 @@
+.idea/*
+target
+.settings
+.idea
+.project
+*.iml
+.classpath
+.factorypath
+*.jks
+*.p12
+*.pem
