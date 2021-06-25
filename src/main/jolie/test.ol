@@ -15,20 +15,18 @@ service Test{
         readStringFromCache@redis({key="mykey"})(responseReadString)
         println@console(responseReadString)()
         
-        for (counter= 0, counter < 5 ,counter++){
+       /*for (counter= 0, counter < 5 ,counter++){
 
             pushStringIntoList@redis({key="mylist" 
                                     value= "myvalue" + counter 
-                                    direction = "R"})()
-        }
+                                    direction = "L"})(responsePush)
+            println@console(responsePush)()                        
+        }*/
 
-        for (counter= 0, counter< 5 ,counter++){
+        for (counter= 0, counter< 7 ,counter++){
             popStringFromList@redis({key="mylist" 
-                                     direction = "L"})(responseList)
+                                     direction = "R"})(responseList)
             println@console(responseList)()
         }
-
-
-
     }
 }

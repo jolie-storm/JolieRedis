@@ -44,4 +44,23 @@ public class RedisConnectorTest {
         request.getFirstChild("direction").setValue("R");
         Assertions.assertTrue(redisConnector.popStringFromList(request).strValue().equals("valueL0"));
     }
+
+    @Test
+    @Order(5)
+    void addToSet() {
+        Value request = Value.create();
+        request.getFirstChild("set").setValue("set1");
+        request.getChildren("values").add(Value.create("value1"));
+        request.getChildren("values").add(Value.create("value2"));
+        request.getChildren("values").add(Value.create("value3"));
+        redisConnector.addToSet(request);
+    }
+
+    @Test
+    @Order(6)
+    void getSet() {
+        Value request = Value.create();
+        request.getFirstChild("set").setValue("set1");
+        Assertions.assertEquals(3 ,redisConnector.getSet(request).getChildren("values").size());
+    }
 }

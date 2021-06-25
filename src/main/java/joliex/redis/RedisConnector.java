@@ -4,10 +4,7 @@ package joliex.redis;
 import jolie.runtime.JavaService;
 import jolie.runtime.Value;
 import jolie.runtime.embedding.RequestResponse;
-import redis.clients.jedis.HostAndPort;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisCluster;
-import redis.clients.jedis.Transaction;
+import redis.clients.jedis.*;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -77,7 +74,8 @@ public class RedisConnector  extends JavaService {
     @RequestResponse
     public Value pushStringIntoList(Value request) {
         Value response = Value.create();
-        Transaction transaction;
+
+
         if (hasCluster) {
             if (request.getFirstChild("direction").strValue().equalsIgnoreCase("R")){
                 response.setValue(jedisCluster.rpush(request.getFirstChild("key").strValue(), request.getFirstChild("value").strValue()).longValue());
@@ -121,9 +119,152 @@ public class RedisConnector  extends JavaService {
                 response.setValue(jedis.lpop(request.getFirstChild("key").strValue()));
             }
         }
-        
+
         return response;
     }
+
+    @RequestResponse
+    public Value addToSet(Value request){
+         Value response = Value.create();
+        if (hasCluster) {
+            request.getChildren("values").forEach(value -> {
+                jedisCluster.sadd(request.getFirstChild("set").strValue(),
+                        value.strValue());
+            });
+
+        }else{
+
+            if (request.hasChildren("transaction") & request.getFirstChild("transaction").boolValue() ){
+                Transaction t ;
+                t = jedis.multi();
+                request.getChildren("values").forEach(value -> {
+                    t.sadd(request.getFirstChild("set").strValue(),
+                           value.strValue());
+                });
+                t.exec();
+            }else{
+                request.getChildren("values").forEach(value -> {
+                    jedis.sadd(request.getFirstChild("set").strValue(),
+                            value.strValue());
+                });
+            }
+
+        }
+      return response;
+    }
+
+    @RequestResponse
+    public Value getSet(Value request) {
+        Value response = Value.create();
+
+        if (hasCluster) {
+
+            Set<String> set = jedisCluster.smembers(request.getFirstChild("set").strValue());
+            set.forEach(s -> {
+                response.getChildren("values").add(Value.create(s));
+            });
+
+
+        } else {
+
+            if (request.hasChildren("transaction") & request.getFirstChild("transaction").boolValue()) {
+                Transaction t;
+                t = jedis.multi();
+                Response<Set<String>> responseSet = t.smembers(request.getFirstChild("set").strValue());
+                responseSet.get().forEach(s -> {
+                    response.getChildren("values").add(Value.create(s));
+                });
+                t.exec();
+            } else {
+                Set<String> set = jedis.smembers(request.getFirstChild("set").strValue());
+                set.forEach(s -> {
+                    response.getChildren("values").add(Value.create(s));
+                });
+            }
+
+        }
+        return response;
+
+    }
+
+    @RequestResponse
+    public Value setHash (Value request){
+        Value response = Value.create();
+        if (hasCluster) {
+            request.getChildren("values").forEach(value -> {
+                jedisCluster.hset(request.getFirstChild("hash").strValue(),
+                                   value.getFirstChild("key").strValue(),
+                                   value.getFirstChild("value").strValue() );
+            });
+
+        }else{
+
+            if (request.hasChildren("transaction") & request.getFirstChild("transaction").boolValue() ){
+                Transaction t ;
+                t = jedis.multi();
+                request.getChildren("values").forEach(value -> {
+                    t.hset(request.getFirstChild("hash").strValue(),
+                            value.getFirstChild("key").strValue(),
+                            value.getFirstChild("value").strValue() );
+                });
+                t.exec();
+            }else{
+                request.getChildren("values").forEach(value -> {
+                    jedis.hset(request.getFirstChild("hash").strValue(),
+                            value.getFirstChild("key").strValue(),
+                            value.getFirstChild("value").strValue() );
+                });
+            }
+
+        }
+        return response;
+
+
+    }
+
+
+    @RequestResponse
+    public Value getHash (Value request){
+        Value response = Value.create();
+        if (hasCluster) {
+            if (request.hasChildren("key")){
+                jedisCluster
+            }
+            jedisCluster.hget()
+            request.getChildren("values").forEach(value -> {
+                jedisCluster.hset(request.getFirstChild("hash").strValue(),
+                        value.getFirstChild("key").strValue(),
+                        value.getFirstChild("value").strValue() );
+            });
+
+        }else{
+
+            if (request.hasChildren("transaction") & request.getFirstChild("transaction").boolValue() ){
+                Transaction t ;
+                t = jedis.multi();
+                request.getChildren("values").forEach(value -> {
+                    t.hset(request.getFirstChild("hash").strValue(),
+                            value.getFirstChild("key").strValue(),
+                            value.getFirstChild("value").strValue() );
+                });
+                t.exec();
+            }else{
+                request.getChildren("values").forEach(value -> {
+                    jedis.hset(request.getFirstChild("hash").strValue(),
+                            value.getFirstChild("key").strValue(),
+                            value.getFirstChild("value").strValue() );
+                });
+            }
+
+        }
+        return response;
+
+
+    }
+
+
+
+
 
 
 
